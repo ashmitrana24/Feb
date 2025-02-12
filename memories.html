@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Beautiful Memories ❤️</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(#ffd6e7, #fff0f5);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .timeline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .memory-folder {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 50px;
+            box-shadow: 0 8px 32px rgba(255, 77, 109, 0.1);
+            width: 500px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .folder-header:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-3px);
+        }
+
+        .folder-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            color: #ff4d6d;
+        }
+
+        .folder-date {
+            font-size: 20px;
+            color: #ff4d6d;
+            font-weight: bold;
+        }
+
+        .photo-grid {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 15px;
+            perspective: 1000px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .photo-grid.active {
+            display: grid;
+        }
+
+        .photo-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .photo-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .photo-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 77, 109, 0.5);
+            border-radius: 4px;
+        }
+
+        .photo-item {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* Makes it square */
+            height: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-10px) rotateX(10deg) rotateY(10deg);
+            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            transition: all 0.5s ease;
+            background-color: rgba(255, 77, 109, 0.1);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Add this new style for broken images */
+        .photo-item img:not([src]), 
+        .photo-item img[src=""],
+        .photo-item img[src="#"] {
+            background: linear-gradient(45deg, #ff4d6d, #ff758c);
+            opacity: 0.5;
+        }
+
+        .photo-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            font-size: 16px;
+            transform: translateY(100%);
+            transition: transform 0.5s ease;
+            text-align: center;
+        }
+
+        .photo-item:hover .photo-caption {
+            transform: translateY(0);
+        }
+
+        .photo-date {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 77, 109, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1;
+        }
+
+        .photo-icon {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            z-index: 1;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 25px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #ff4d6d, #ff758c);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.2);
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 77, 109, 0.3);
+        }
+
+        .falling-petals {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="falling-petals"></div>
+    <a href="index.html" class="back-btn">← Back to Home</a>
+    
+    <div class="timeline">
+        <div class="memory-folder" style="animation-delay: 0.2s">
+            <div class="folder-header" onclick="toggleFolder(this)">
+                <span class="folder-icon">💝</span>
+                <span class="folder-date">Click Me!</span>
+            </div>
+            <div class="photo-grid">
+                <div class="photo-item">
+                   
+                    <img src="./images/image1.jpg" alt="First Date" onerror="handleImageError(this)">
+                    <div class="photo-caption">
+                        My forever Valentine<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                   
+                    <img src="./images/image2.jpg" alt="Movie Night">
+                    <div class="photo-caption">
+                        My Babyyy <br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image3.jpg" alt="Sunset">
+                    <div class="photo-caption">
+                        My Princess <br>
+                       
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image4.jpg" alt="Fair">
+                    <div class="photo-caption">
+                        My Love <br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image5.jpg" alt="Birthday">
+                    <div class="photo-caption">
+                        Aesthetic moments <br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image6.jpg" alt="Spring">
+                    <div class="photo-caption">
+                        Those eyes !!!<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image7.jpg" alt="Art">
+                    <div class="photo-caption">
+                        Meri Jaan<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image8.jpg" alt="Dinner">
+                    <div class="photo-caption">
+                        Meri Bachhiii...<br>
+                       
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image9.jpg" alt="Concert">
+                    <div class="photo-caption">
+                        Wanna Kiss you !!<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image10.jpg" alt="Beach">
+                    <div class="photo-caption">
+                        I miss you...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image11.jpg" alt="Gaming">
+                    <div class="photo-caption">
+                        Kitni khubsoorat ho aap !!<br>
+                      
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image12.jpg" alt="Ice Cream">
+                    <div class="photo-caption">
+                        Fits perfectly ...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image13.jpg" alt="Library">
+                    <div class="photo-caption">
+                        Cutieeeee<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image14.jpg" alt="Circus">
+                    <div class="photo-caption">
+                        Love Love Love !!!<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image15.jpg" alt="City">
+                    <div class="photo-caption">
+                        Our Expressions...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image16.jpg" alt="Hiking">
+                    <div class="photo-caption">
+                        That stare....<br>
+                       
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image17.jpg" alt="Cooking">
+                    <div class="photo-caption">
+                        Smile kitni pyaari hai aapki...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image18.jpg" alt="Christmas">
+                    <div class="photo-caption">
+                        Meri Khushiii...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image19.jpg" alt="Painting">
+                    <div class="photo-caption">
+                        Candid to ho aaap...<br>
+                       
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image20.jpg" alt="Stars">
+                    <div class="photo-caption">
+                        Counting stars with you..<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image21.jpg" alt="Theater">
+                    <div class="photo-caption">
+                        Jaan ho aap meri....<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image22.jpg" alt="Garden">
+                    <div class="photo-caption">
+                        Hayee meri choti si bachhiii...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image23.jpg" alt="Carnival">
+                    <div class="photo-caption">
+                        Muskurayaa kro aap...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image24.jpg" alt="Autumn">
+                    <div class="photo-caption">
+                        Falling in love with you...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image25.jpg" alt="Piano">
+                    <div class="photo-caption">
+                        Aankhe boht pyaari hai aapki...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image26.jpg" alt="Rainbow">
+                    <div class="photo-caption">
+                        Aise hi mere paas rehna aap...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image27.jpg" alt="Museum">
+                    <div class="photo-caption">
+                        Hot ho bohot.....<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                   
+                    <img src="./images/image28.jpg" alt="Sunrise">
+                    <div class="photo-caption">
+                        Cute cute chote chote hehehe...<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image29.jpg" alt="Carousel">
+                    <div class="photo-caption">
+                        Sharmaa jaau aise dekh ke aapko....<br>
+                        
+                    </div>
+                </div>
+
+                <div class="photo-item">
+                    
+                    <img src="./images/image30.jpg" alt="Wishes">
+                    <div class="photo-caption">
+                        I LOVE YOUUUUU<br>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFolder(header) {
+            const grid = header.nextElementSibling;
+            const isActive = grid.classList.contains('active');
+            
+            // First remove active class from all grids
+            document.querySelectorAll('.photo-grid').forEach(g => {
+                g.classList.remove('active');
+            });
+
+            // If the clicked grid wasn't active, make it active
+            if (!isActive) {
+                grid.classList.add('active');
+                // Trigger reflow for animation
+                grid.offsetHeight;
+            }
+        }
+
+        // Create falling petals
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.style.position = 'absolute';
+            petal.style.width = Math.random() * 15 + 5 + 'px';
+            petal.style.height = petal.style.width;
+            petal.style.background = '#ffc0cb';
+            petal.style.borderRadius = '150% 0 150% 0';
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.animation = `falling ${Math.random() * 3 + 2}s linear forwards`;
+            
+            document.querySelector('.falling-petals').appendChild(petal);
+            
+            setTimeout(() => petal.remove(), 5000);
+        }
+
+        setInterval(createPetal, 300);
+
+        // Add falling animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes falling {
+                0% { transform: translateY(-10vh) rotate(0deg); }
+                100% { transform: translateY(100vh) rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add this function
+        function handleImageError(img) {
+            img.onerror = null; // Prevent infinite loop
+            img.src = '#'; // Set to empty to trigger fallback style
+            console.log('Image failed to load:', img.alt);
+        }
+
+        // Update your photo items to include error handling
+        document.querySelectorAll('.photo-item img').forEach(img => {
+            img.onerror = () => handleImageError(img);
+        });
+    </script>
+</body>
+</html> 
