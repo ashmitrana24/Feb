@@ -112,7 +112,8 @@
             border-radius: 150% 0 150% 0;
             animation: falling linear infinite;
             opacity: 0.85;
-            box-shadow: 0 3px 6px rgba(255, 77, 109, 0.3);
+            will-change: transform;
+            transform: translateZ(0);
         }
 
         @keyframes heartbeat {
@@ -192,35 +193,27 @@
             margin-top: 25px;
             font-size: 20px;
             color: #ff4d6d;
-            animation: fadeIn 1s;
             padding: 20px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             backdrop-filter: blur(5px);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
         .popup {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0);
+            transform: translate(-50%, -50%);
             background: white;
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             z-index: 100;
-            opacity: 0;
-            transition: all 0.3s;
+            display: none;
         }
 
         .popup.active {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
+            display: block;
         }
 
         .close-btn {
@@ -317,39 +310,47 @@
     </div>
 
     <script>
-        // Create falling cherry blossom petals
+        // Optimize petal creation for mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
         function createPetal() {
             const petal = document.createElement('div');
             petal.className = 'petal';
             
-            // Random petal properties with increased sizes
-            const size = Math.random() * 22 + 10; // Slightly larger petals
+            // Reduce number and size of petals on mobile
+            const size = isMobile ? 
+                (Math.random() * 15 + 8) : 
+                (Math.random() * 22 + 10);
+            
             const left = Math.random() * window.innerWidth;
-            const duration = Math.random() * 4 + 2.5; // Slightly faster fall
-            const delay = Math.random() * 2; // Shorter delay
+            const duration = isMobile ? 
+                (Math.random() * 3 + 2) : 
+                (Math.random() * 4 + 2.5);
             
             petal.style.width = `${size}px`;
             petal.style.height = `${size}px`;
             petal.style.left = `${left}px`;
             petal.style.animationDuration = `${duration}s`;
-            petal.style.animationDelay = `${delay}s`;
             
             document.body.appendChild(petal);
             
-            setTimeout(() => {
-                petal.remove();
-            }, (duration + delay) * 1000);
+            // Remove petal after animation
+            setTimeout(() => petal.remove(), duration * 1000);
         }
 
-        // Create petals even more frequently
-        setInterval(createPetal, 150); // Changed from 200 to 150ms
+        // Adjust creation interval based on device
+        const petalInterval = isMobile ? 300 : 150;
+        setInterval(createPetal, petalInterval);
 
+        // Optimize sparkle creation
         function createSparkles() {
+            // Limit number of sparkles on mobile
+            const sparkleCount = isMobile ? 15 : 30;
             const celebration = document.createElement('div');
             celebration.className = 'celebration';
             document.body.appendChild(celebration);
 
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < sparkleCount; i++) {
                 setTimeout(() => {
                     const sparkle = document.createElement('div');
                     sparkle.className = 'sparkle';
@@ -358,11 +359,41 @@
                     celebration.appendChild(sparkle);
 
                     setTimeout(() => sparkle.remove(), 1000);
-                }, i * 50);
+                }, i * (isMobile ? 100 : 50));
             }
 
             setTimeout(() => celebration.remove(), 2000);
         }
+
+        // Debounce function for performance
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Optimize button click handlers
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', debounce(function(e) {
+                buttonClickAnimation(this);
+            }, 250));
+        });
+
+        // Optimize popup handling
+        window.addEventListener('click', debounce((e) => {
+            const popups = document.querySelectorAll('.popup');
+            popups.forEach(popup => {
+                if (e.target === popup) {
+                    popup.classList.remove('active');
+                }
+            });
+        }, 250));
 
         function buttonClickAnimation(btn) {
             btn.style.animation = 'celebrate 0.5s ease';
@@ -373,22 +404,16 @@
         function showSpecialMessage() {
             const message = document.getElementById('special-message');
             message.style.display = 'block';
-            createSparkles();
-            message.style.animation = 'fadeIn 1s, celebrate 0.5s ease';
         }
 
         function showPoem() {
             const popup = document.getElementById('poem-popup');
             popup.classList.add('active');
-            createSparkles();
-            popup.style.animation = 'celebrate 0.5s ease';
         }
 
         function showSomethingMore() {
             const popup = document.getElementById('something-more-popup');
             popup.classList.add('active');
-            createSparkles();
-            popup.style.animation = 'celebrate 0.5s ease';
         }
 
         function closePopup(id) {
@@ -403,23 +428,6 @@
                 heart.style.transform = '';
             }, 500);
         }
-
-        // Close popups when clicking outside
-        window.addEventListener('click', (e) => {
-            const popups = document.querySelectorAll('.popup');
-            popups.forEach(popup => {
-                if (e.target === popup) {
-                    popup.classList.remove('active');
-                }
-            });
-        });
-
-        // Update your button click handlers
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                buttonClickAnimation(this);
-            });
-        });
     </script>
 </body>
 </html> 
